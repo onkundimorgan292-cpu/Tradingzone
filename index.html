@@ -63,11 +63,11 @@
   @keyframes shine{to{background-position:200% center}}
   .sub{color:var(--muted);letter-spacing:3px;font-size:12px;margin-top:10px;text-align:center}
   .bar-wrap{width:min(420px,80vw);height:8px;background:rgba(90,150,255,.15);border-radius:8px;margin-top:26px;overflow:hidden}
-  .bar-fill{height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .12s linear}
+  .bar-fill{height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .1s linear}
   .pct{margin-top:10px;font-size:13px;color:#9ec5ff;letter-spacing:2px}
   .seq{margin-top:6px;font-size:11px;color:var(--muted);font-family:monospace;height:16px}
 
-  /* ================= WELCOME (STEP 4) ================= */
+  /* ================= WELCOME ================= */
   .welcome{position:fixed;inset:0;display:none;z-index:90;background:rgba(5,10,24,.9);backdrop-filter:blur(8px);
            align-items:center;justify-content:center;padding:20px}
   .welcome.on{display:flex}
@@ -195,7 +195,6 @@
           color:#fff;font-weight:900;font-size:22px}
   @keyframes aipulse{70%{box-shadow:0 0 0 22px rgba(47,123,255,0)}100%{box-shadow:0 0 0 0 rgba(47,123,255,0)}}
 
-  /* shout-out toast */
   #toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);
          background:linear-gradient(135deg,var(--blue),#1b4fd8);color:#fff;padding:12px 22px;border-radius:12px;
          font-size:13px;font-weight:700;letter-spacing:1px;opacity:0;pointer-events:none;transition:.3s;z-index:200;
@@ -210,7 +209,6 @@
 </head>
 <body>
 
-<!-- ============ STEP 1: BACKGROUND ============ -->
 <div id="bg">
   <div class="orb b"></div><div class="orb r"></div>
   <span class="satellite" style="top:12%;left:8%">🛰️</span>
@@ -229,7 +227,6 @@
   </div>
 </div>
 
-<!-- ============ STEPS 2 & 3: SPLASH ============ -->
 <div class="splash on" id="splash">
   <div class="logo" id="splashTitle">VECTORMASHER</div>
   <div class="sub" id="splashMsg">PLEASE WAIT WHILE WE CONNECT TO SERVER…</div>
@@ -238,7 +235,6 @@
   <div class="seq" id="seq1"></div>
 </div>
 
-<!-- ============ STEP 4: WELCOME ============ -->
 <div class="welcome" id="welcome">
   <div class="wgrid">
     <div class="wleft">
@@ -267,7 +263,6 @@
   </div>
 </div>
 
-<!-- ============ STEP 5: ONBOARDING SLIDE ============ -->
 <div class="onboard" id="onboard">
   <div class="onbox">
     <h2>EVERYTHING IN ONE WORKING SPACE<br/>FREE TO USE</h2>
@@ -276,7 +271,6 @@
   </div>
 </div>
 
-<!-- ============ WORKSPACE ============ -->
 <div id="app">
   <div class="topbar">
     <span class="brand">VECTORMASHER</span>
@@ -314,28 +308,30 @@ document.addEventListener('click',e=>{
   if(label && !b.onclick) shout(label+' — OK');
 });
 
-/* ================= STEP 2 & 3: SPLASH SEQUENCE (NOW FASTER) ================= */
+/* ================= STEP 2 & 3: SPLASH SEQUENCE (ULTRA FAST) ================= */
 const seq2=["BOOTING NODE…","HANDSHAKE…","LOADING ENGINE…","CONNECTING WS…","READY"];
 const seq3=["INITIALIZING D-BOT…","LOADING STRATEGIES…","CALIBRATING…","D-BOT ONLINE…"];
+
 function runSplash(title,msg,seqArr,next){
   document.getElementById('splashTitle').innerText=title;
   document.getElementById('splashMsg').innerText=msg;
   const bar=document.getElementById('bar1'),pct=document.getElementById('pct1'),seq=document.getElementById('seq1');
   bar.style.width='0%';pct.innerText='0%';let p=0,i=0;
   
-  // --- FASTER TIMER LOGIC ---
+  // FAST TIMER: Jumps 10-25% every 40ms. Takes ~1 second per screen.
   const timer=setInterval(()=>{
-    p += Math.random() * 10 + 5; // Jumps 5-15% at a time
+    p += Math.floor(Math.random() * 15) + 10; 
     if(p>100) p=100;
-    bar.style.width=p+'%'; pct.innerText=Math.floor(p)+'%';
+    bar.style.width=p+'%'; pct.innerText=p+'%';
     const si=Math.min(seqArr.length-1,Math.floor(p/100*seqArr.length));
     if(si!==i){i=si;seq.innerText=seqArr[si];}
     if(p>=100){
       clearInterval(timer); seq.innerText='✔ COMPLETE';
-      setTimeout(next, 200); // Wait only 0.2s before moving to next step
+      setTimeout(next, 200); // Move on very quickly
     }
-  }, 30); // Runs every 0.03s (much faster)
+  }, 40); 
 }
+
 /* boot: splash 2 → splash 3 → welcome */
 runSplash("VECTORMASHER","PLEASE WAIT WHILE WE CONNECT TO SERVER…",seq2,()=>{
   runSplash("VECTORMASHER","INITIALIZING D-BOT…",seq3,()=>{
@@ -344,15 +340,14 @@ runSplash("VECTORMASHER","PLEASE WAIT WHILE WE CONNECT TO SERVER…",seq2,()=>{
   });
 });
 
-/* ================= LOGIN / SIGNUP (real Deriv OAuth URLs) ================= */
-const APP_ID="YOUR_APP_ID"; // ← replace after registering at developers.deriv.com
+/* ================= LOGIN / SIGNUP ================= */
+const APP_ID="YOUR_APP_ID"; 
 function openDeriv(mode){
   shout(mode==='login'?'OPENING DERIV LOGIN':'OPENING DERIV SIGN-UP');
   const url = mode==='login'
     ? `https://oauth.deriv.com/oauth2/authorize?app_id=${APP_ID}`
     : `https://deriv.com/signup`;
   window.open(url,'_blank');
-  // for a smooth demo flow, advance to onboarding after a moment
   setTimeout(()=>{document.getElementById('welcome').classList.remove('on');
                   document.getElementById('onboard').classList.add('on');},1200);
 }
@@ -433,16 +428,142 @@ function renderMain(){
   const m=document.getElementById('main');
   if(currentView==='acc'){ m.innerHTML=accView(); return; }
   if(currentView==='chat'){ m.innerHTML=chatView(); return; }
-  if(currentView==='dashboard'||currentView==='manual'||currentView==='speed'||
-     currentView==='bulk'||currentView==='copy'||currentView==='auto'||
-     currentView==='freebots'||currentView==='premium'||currentView==='signals'||currentView==='builder'){
-    m.innerHTML=traderView(currentView); return;
-  }
-  m.innerHTML=traderView('dashboard');
+  m.innerHTML=traderView(currentView); 
 }
 
 function traderView(k){
   return `
   <div class="greet"><span id="greetWord">${greetWord()}</span>, TRADER 👋</div>
   <div class="live"><span class="dot"></span> MARKET LIVE</div>
-  <
+  <div class="time">🕒 <span id="liveTime">${new Date().toLocaleTimeString()}</span></div>
+
+  <div class="volstrip">
+    ${['VOL 10','VOL 25','VOL 50','VOL 100'].map((v,i)=>
+      `<button class="pill ${i===2?'active':''}" onclick="pickVol('${v}',this)">${v}</button>`).join('')}
+  </div>
+
+  <div class="grid2">
+    <div>
+      <div class="panel">
+        <h4>DIGIT DISTRIBUTION — 0 TO 9</h4>
+        <div class="digits" id="digits">
+          ${[0,1,2,3,4,5,6,7,8,9].map(d=>`<div class="digit" onclick="tapDigit(${d},this)">${d}</div>`).join('')}
+        </div>
+        <div class="row">
+          <div class="field"><label>NUMBER OF TICKS</label><input id="ticks" type="number" value="5" min="1" max="10"/></div>
+          <div class="field"><label>STAKE (${kes?'KES':'USD'})</label><input id="stake" type="number" value="${kes?130:1}"/></div>
+        </div>
+        <div class="ou">
+          <div class="sidebox over"><span>OVER</span><b>52%</b><div class="mini">payout 0.94x</div></div>
+          <div class="sidebox under"><span>UNDER</span><b>48%</b><div class="mini">payout 0.91x</div></div>
+        </div>
+        <div class="cursorline"><div class="g"></div><div class="r"></div><div class="cursor"></div></div>
+        <div class="tradebtns">
+          <button class="btn btn-green" onclick="placeTrade('OVER')">BUY OVER</button>
+          <button class="btn btn-red" onclick="placeTrade('UNDER')">BUY UNDER</button>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h4>QUICK ACTIONS</h4>
+        <div class="quick">
+          <button onclick="shout('MANUAL TRADING OPENED')">MANUAL TRADING — POPULAR ⭐<b>01</b></button>
+          <button onclick="shout('LOAD BOT OPENED')">LOAD BOT<b>02</b></button>
+          <button onclick="shout('SPEED BOT OPENED')">SPEED BOT<b>03</b></button>
+          <button onclick="shout('PREMIUM BOT OPENED')">PREMIUM BOT<b>04</b></button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h4>${MENU.find(m=>m[1]===k)?MENU.find(m=>m[1]===k)[0].toUpperCase():'WORKSPACE'}</h4>
+        <div class="mini">Market: <b style="color:#fff">Volatility 75 (1s)</b></div>
+        <div class="mini" style="margin-top:6px">Balance: <b style="color:var(--green)">${money(real?0:10000)}</b> ${real?'REAL':'DEMO'}</div>
+        <div class="mini" style="margin-top:6px">Status: <b style="color:var(--green)">CONNECTED</b></div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <h4>AI SIGNAL</h4>
+        <div class="mini">Model confidence: <b style="color:var(--blue)">87%</b></div>
+        <div class="mini" style="margin-top:6px">Suggested: <b style="color:var(--green)">OVER 4</b></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="shout('AI SIGNAL APPLIED')">APPLY SIGNAL</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function accView(){
+  return `
+  <div class="greet"><span id="greetWord">${greetWord()}</span>, TRADER 👋</div>
+  <div class="live"><span class="dot"></span> ACCUMULATOR LIVE</div>
+  <div class="time">🕒 <span id="liveTime">${new Date().toLocaleTimeString()}</span></div>
+
+  <div class="volstrip">
+    ${['VOL 10','VOL 25','VOL 50','VOL 100'].map((v,i)=>
+      `<button class="pill ${i===3?'active':''}" onclick="pickVol('${v}',this)">${v}</button>`).join('')}
+  </div>
+
+  <div class="panel">
+    <h4>ACCUMULATOR OPTIONS (OVER / UNDER HIDDEN)</h4>
+    <div class="acc-grid">
+      <button class="pill" onclick="shout('GROWTH RATE 1%')">GROWTH 1%</button>
+      <button class="pill" onclick="shout('GROWTH RATE 2%')">GROWTH 2%</button>
+      <button class="pill" onclick="shout('GROWTH RATE 3%')">GROWTH 3%</button>
+      <button class="pill" onclick="shout('GROWTH RATE 5%')">GROWTH 5%</button>
+      <button class="pill" onclick="shout('STAKE SET')">SET STAKE</button>
+      <button class="pill" onclick="shout('TAKE PROFIT')">TAKE PROFIT</button>
+      <button class="pill" onclick="shout('STOP LOSS')">STOP LOSS</button>
+      <button class="pill" onclick="shout('MAX TICKS')">MAX TICKS</button>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <div class="field"><label>STAKE (${kes?'KES':'USD'})</label><input type="number" value="${kes?130:1}"/></div>
+      <div class="field"><label>GROWTH %</label><input type="number" value="3"/></div>
+    </div>
+    <div class="tradebtns">
+      <button class="btn btn-green" onclick="shout('ACCUMULATOR STARTED')">START ACCUMULATOR</button>
+      <button class="btn btn-outline" onclick="shout('ACCUMULATOR STOPPED')">STOP</button>
+    </div>
+  </div>`;
+}
+
+function chatView(){
+  return `
+  <div class="greet"><span id="greetWord">${greetWord()}</span>, TRADER 👋</div>
+  <div class="live"><span class="dot"></span> LIVE CHAT</div>
+  <div class="panel" style="margin-top:14px;height:60vh;display:flex;flex-direction:column">
+    <h4>TRADER CHAT</h4>
+    <div style="flex:1;overflow-y:auto;font-size:13px;line-height:1.9">
+      <div><b style="color:var(--blue)">Mod:</b> Welcome to VECTORMASHER 👋</div>
+      <div><b style="color:var(--green)">Ken:</b> VOL 75 is trending today</div>
+      <div><b style="color:var(--red)">Amina:</b> Hit +KES 2,400 with the speed bot</div>
+      <div><b style="color:var(--blue)">Yusuf:</b> Anyone testing accumulator?</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <input placeholder="Type a message…" style="margin:0"/>
+      <button class="btn btn-primary" onclick="shout('MESSAGE SENT')">SEND</button>
+    </div>
+  </div>`;
+}
+
+/* ================= INTERACTIONS ================= */
+function pickVol(v,btn){
+  document.querySelectorAll('.volstrip .pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  shout('MARKET CHANGED TO '+v);
+}
+function tapDigit(d,el){
+  shout('DIGIT '+d+' SELECTED');
+  el.classList.toggle('win');
+  setTimeout(()=>el.classList.remove('win'),800);
+}
+function placeTrade(dir){
+  const stake=document.getElementById('stake')?.value||1;
+  shout('ORDER PLACED: '+dir+' · STAKE '+stake);
+  document.querySelectorAll('.digit').forEach(d=>{
+    d.classList.remove('win','lose');
+    if(Math.random()<0.15) d.classList.add(Math.random()<0.5?'win':'lose');
+  });
+}
+</script>
+</body>
+</html>
