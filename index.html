@@ -3,567 +3,403 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>VECTORMASHER — Powered by Deriv</title>
+<title>VECTORMASHER — Trading Workspace</title>
 <style>
   :root{
-    --blue:#2f7bff; --blue-2:#0a1a3f; --red:#ff2f5a;
-    --bg:#050a18; --panel:rgba(10,22,48,.72); --line:rgba(90,150,255,.25);
-    --txt:#e8f1ff; --muted:#8aa5cc; --green:#25d07a;
+    --blue:#2f7bff; --red:#ff2f5a; --green:#25d07a;
+    --bg:#050a18; --panel:rgba(10,22,48,.85); --line:rgba(90,150,255,.25);
+    --txt:#e8f1ff; --muted:#8aa5cc; --card-bg:rgba(5,12,30,.7);
+  }
+  body.light-mode {
+    --bg:#eaf1ff; --panel:#ffffff; --line:#c0d4f5;
+    --txt:#0a1a3f; --muted:#4a6a9a; --card-bg:#f0f5ff;
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
-  body{background:var(--bg);color:var(--txt);overflow:hidden;height:100vh}
+  body{background:var(--bg);color:var(--txt);overflow:hidden;height:100vh;display:flex;flex-direction:column;transition:background .3s,color .3s}
 
-  /* ================= STEP 1: ANIMATED TECH-ROOM BACKGROUND ================= */
-  #bg{position:fixed;inset:0;z-index:-2;overflow:hidden;
-      background:radial-gradient(ellipse at 20% 20%,rgba(47,123,255,.35),transparent 55%),
-                 radial-gradient(ellipse at 85% 80%,rgba(255,47,90,.28),transparent 55%),
-                 radial-gradient(ellipse at 50% 50%,#0a1530,#050a18 80%)}
-  #bg::after{content:"";position:absolute;inset:0;
-      background-image:linear-gradient(rgba(90,150,255,.06) 1px,transparent 1px),
-                       linear-gradient(90deg,rgba(90,150,255,.06) 1px,transparent 1px);
-      background-size:44px 44px;animation:grid 18s linear infinite}
-  @keyframes grid{to{background-position:44px 44px,44px 44px}}
-  .orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;animation:float 14s ease-in-out infinite}
-  .orb.b{background:var(--blue);width:340px;height:340px;top:-80px;left:-60px}
-  .orb.r{background:var(--red);width:300px;height:300px;bottom:-90px;right:-70px;animation-delay:-6s}
-  @keyframes float{50%{transform:translate(40px,-30px) scale(1.1)}}
-
-  /* tech room: big monitor (bot) + small laptop (trading hub) */
-  .room{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);
-        width:min(900px,92vw);display:flex;gap:24px;align-items:flex-end;opacity:.55}
-  .monitor{flex:1;aspect-ratio:16/10;border:3px solid rgba(90,150,255,.5);border-radius:14px;
-        background:linear-gradient(160deg,#071026,#0b1c3d);position:relative;overflow:hidden;
-        box-shadow:0 0 60px rgba(47,123,255,.4),inset 0 0 40px rgba(47,123,255,.15);
-        animation:pulseM 3s ease-in-out infinite}
-  @keyframes pulseM{50%{box-shadow:0 0 90px rgba(47,123,255,.7),inset 0 0 50px rgba(47,123,255,.25)}}
-  .monitor .bar{position:absolute;left:10px;right:10px;top:10px;height:6px;border-radius:3px;
-        background:linear-gradient(90deg,var(--blue),var(--red));opacity:.8}
-  .monitor .bot{position:absolute;left:14px;bottom:14px;font-size:11px;color:#7ec8ff;letter-spacing:1px}
-  .monitor .candles{position:absolute;bottom:30px;left:14px;right:14px;height:55%;display:flex;align-items:flex-end;gap:5px}
-  .candles i{flex:1;background:linear-gradient(var(--green),transparent);border-radius:2px;animation:grow 2s ease-in-out infinite alternate}
-  .candles i:nth-child(even){background:linear-gradient(var(--red),transparent)}
-  @keyframes grow{to{transform:scaleY(.45)}}
-  .laptop{width:32%;aspect-ratio:16/10;border:3px solid rgba(255,47,90,.55);border-radius:10px;
-        background:linear-gradient(160deg,#1a0710,#3d0b1c);position:relative;overflow:hidden;
-        box-shadow:0 0 45px rgba(255,47,90,.4);animation:pulseL 3.5s ease-in-out infinite}
-  @keyframes pulseL{50%{box-shadow:0 0 70px rgba(255,47,90,.7)}}
-  .laptop .line{position:absolute;left:8px;right:8px;height:4px;border-radius:2px;background:rgba(255,120,150,.6);animation:slide 3s linear infinite}
-  @keyframes slide{to{transform:translateX(20px)}}
-  .satellite{position:absolute;font-size:26px;opacity:.5;animation:orbit 22s linear infinite}
-  @keyframes orbit{from{transform:rotate(0) translateX(240px) rotate(0)}to{transform:rotate(360deg) translateX(240px) rotate(-360deg)}}
-
-  /* ================= SPLASH SCREENS ================= */
-  .splash{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
-          z-index:100;background:rgba(5,10,24,.94);backdrop-filter:blur(6px)}
-  .splash.on{display:flex}
-  .logo{font-size:clamp(28px,6vw,54px);font-weight:900;letter-spacing:6px;
-        background:linear-gradient(90deg,var(--blue),#fff,var(--red));
-        -webkit-background-clip:text;background-clip:text;color:transparent;
-        animation:shine 2.5s linear infinite;background-size:200% auto}
+  /* SPLASH SCREEN */
+  .splash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;background:var(--bg);transition:opacity .5s}
+  .splash.hide{opacity:0;pointer-events:none}
+  .logo{font-size:clamp(28px,6vw,54px);font-weight:900;letter-spacing:6px;background:linear-gradient(90deg,var(--blue),#fff,var(--red));-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 2.5s linear infinite;background-size:200% auto}
   @keyframes shine{to{background-position:200% center}}
   .sub{color:var(--muted);letter-spacing:3px;font-size:12px;margin-top:10px;text-align:center}
   .bar-wrap{width:min(420px,80vw);height:8px;background:rgba(90,150,255,.15);border-radius:8px;margin-top:26px;overflow:hidden}
   .bar-fill{height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .1s linear}
   .pct{margin-top:10px;font-size:13px;color:#9ec5ff;letter-spacing:2px}
-  .seq{margin-top:6px;font-size:11px;color:var(--muted);font-family:monospace;height:16px}
 
-  /* ================= WELCOME ================= */
-  .welcome{position:fixed;inset:0;display:none;z-index:90;background:rgba(5,10,24,.9);backdrop-filter:blur(8px);
-           align-items:center;justify-content:center;padding:20px}
+  /* WELCOME SCREEN */
+  .welcome{position:fixed;inset:0;z-index:90;background:var(--bg);display:none;align-items:center;justify-content:center;padding:20px}
   .welcome.on{display:flex}
   .wgrid{width:min(1050px,100%);display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center}
-  @media(max-width:820px){.wgrid{grid-template-columns:1fr}}
-  .wleft h1{font-size:clamp(30px,5vw,52px);letter-spacing:3px;
-        background:linear-gradient(90deg,var(--blue),#fff,var(--red));
-        -webkit-background-clip:text;background-clip:text;color:transparent}
+  .wleft h1{font-size:clamp(30px,5vw,52px);letter-spacing:3px;background:linear-gradient(90deg,var(--blue),#fff,var(--red));-webkit-background-clip:text;background-clip:text;color:transparent}
   .wleft .pow{margin-top:6px;font-size:12px;letter-spacing:4px;color:var(--muted)}
-  .wleft .tag{margin-top:22px;font-size:15px;color:#b9d2ff;max-width:420px;line-height:1.6}
   .wbtns{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
-  .btn{border:none;cursor:pointer;border-radius:12px;padding:14px 26px;font-weight:700;font-size:14px;
-       letter-spacing:1px;transition:.2s;position:relative;overflow:hidden}
+  .btn{border:none;cursor:pointer;border-radius:12px;padding:14px 26px;font-weight:700;font-size:14px;letter-spacing:1px;transition:.2s}
   .btn:active{transform:scale(.96)}
   .btn-primary{background:linear-gradient(135deg,var(--blue),#1b4fd8);color:#fff;box-shadow:0 8px 24px rgba(47,123,255,.4)}
-  .btn-primary:hover{box-shadow:0 10px 32px rgba(47,123,255,.7)}
-  .btn-outline{background:transparent;color:#fff;border:1.5px solid rgba(90,150,255,.55)}
-  .btn-outline:hover{background:rgba(90,150,255,.12)}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;
-        backdrop-filter:blur(10px);box-shadow:0 20px 50px rgba(0,0,0,.5)}
-  .card h3{font-size:14px;letter-spacing:2px;color:#9ec5ff;margin-bottom:14px}
-  input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);
-        background:rgba(5,12,30,.8);color:#fff;font-size:14px;outline:none;margin-bottom:10px}
-  input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,123,255,.2)}
-  .mini{font-size:11px;color:var(--muted);line-height:1.5}
-  .onboard{position:fixed;inset:0;display:none;z-index:95;background:rgba(5,10,24,.96);
-           align-items:center;justify-content:center;padding:20px}
-  .onboard.on{display:flex}
-  .onbox{border:2px solid var(--blue);border-radius:22px;padding:44px 30px;max-width:760px;text-align:center;
-         background:linear-gradient(160deg,rgba(47,123,255,.12),rgba(255,47,90,.08));
-         box-shadow:0 0 80px rgba(47,123,255,.3)}
-  .onbox h2{font-size:clamp(20px,4vw,34px);letter-spacing:4px;font-weight:900;line-height:1.4}
-  .onbox p{margin-top:16px;color:var(--muted);letter-spacing:2px;font-size:12px}
-  .onbox .btn{margin-top:28px}
-
-  /* ================= WORKSPACE ================= */
+  .btn-outline{background:transparent;color:var(--txt);border:1.5px solid var(--line)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}
+  .card h3{font-size:14px;letter-spacing:2px;color:var(--blue);margin-bottom:14px}
+  input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--txt);font-size:14px;outline:none;margin-bottom:10px}
+  
+  /* APP LAYOUT (HORIZONTAL) */
   #app{display:none;height:100vh;flex-direction:column}
   #app.on{display:flex}
-  .topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;
-          background:rgba(8,16,36,.85);border-bottom:1px solid var(--line);backdrop-filter:blur(10px);z-index:5}
-  .brand{font-weight:900;letter-spacing:2px;font-size:15px;
-         background:linear-gradient(90deg,var(--blue),#fff,var(--red));
-         -webkit-background-clip:text;background-clip:text;color:transparent;margin-right:6px}
-  .pill{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;
-        background:rgba(10,22,48,.6);color:#cfe0ff;transition:.2s;white-space:nowrap}
-  .pill:hover{border-color:var(--blue);background:rgba(47,123,255,.15)}
-  .pill.active{background:linear-gradient(135deg,var(--blue),#1b4fd8);color:#fff;border-color:transparent}
-  .boxed{border:2px solid var(--blue);border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;
-         letter-spacing:2px;color:#9ec5ff;background:rgba(47,123,255,.08)}
-  .switch{position:relative;width:96px;height:32px;border-radius:16px;background:#132a55;cursor:pointer;
-          border:1px solid var(--line);display:flex;align-items:center;padding:3px}
-  .switch .knob{width:42px;height:24px;border-radius:12px;background:var(--green);transition:.25s;
-                display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#04170d}
+  
+  .topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;background:var(--panel);border-bottom:1px solid var(--line);z-index:5}
+  .brand{font-weight:900;letter-spacing:2px;font-size:15px;background:linear-gradient(90deg,var(--blue),#fff,var(--red));-webkit-background-clip:text;color:transparent}
+  .pill{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;background:var(--card-bg);color:var(--txt);transition:.2s}
+  .pill:hover{border-color:var(--blue)}
+  .pill.active{background:var(--blue);color:#fff;border-color:transparent}
+  .switch{position:relative;width:96px;height:32px;border-radius:16px;background:#132a55;cursor:pointer;border:1px solid var(--line);display:flex;align-items:center;padding:3px}
+  .switch .knob{width:42px;height:24px;border-radius:12px;background:var(--green);transition:.25s;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#04170d}
   .switch.real{background:#3a0c18}
   .switch.real .knob{transform:translateX(46px);background:var(--red);color:#fff}
-  .spacer{flex:1}
 
   .layout{display:flex;flex:1;overflow:hidden}
-  .side{width:210px;overflow-y:auto;background:rgba(8,16,36,.8);border-right:1px solid var(--line);padding:12px 8px}
-  .side button{width:100%;text-align:left;padding:10px 12px;margin-bottom:4px;border-radius:9px;border:none;
-               background:transparent;color:#b9d2ff;font-size:13px;cursor:pointer;transition:.15s;display:flex;justify-content:space-between}
-  .side button:hover{background:rgba(47,123,255,.14)}
-  .side button.active{background:linear-gradient(90deg,rgba(47,123,255,.35),transparent);color:#fff;border-left:3px solid var(--blue)}
-  .side .sec{font-size:10px;color:#5f7ba8;letter-spacing:2px;margin:12px 8px 6px}
+  
+  /* SIDEBAR */
+  .side{width:200px;overflow-y:auto;background:var(--panel);border-right:1px solid var(--line);padding:12px 8px;flex-shrink:0}
+  .side button{width:100%;text-align:left;padding:10px 12px;margin-bottom:4px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-size:13px;cursor:pointer;transition:.15s}
+  .side button:hover{background:var(--card-bg);color:var(--txt)}
+  .side button.active{background:rgba(47,123,255,.15);color:var(--blue);font-weight:700;border-left:3px solid var(--blue)}
 
-  .main{flex:1;overflow-y:auto;padding:16px;position:relative}
-  .greet{font-size:20px;font-weight:800;letter-spacing:1px}
+  /* MAIN WORKSPACE */
+  .main{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column}
+  
+  .greet{font-size:22px;font-weight:800;letter-spacing:1px;margin-bottom:10px}
   .greet span{color:var(--blue)}
-  .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--green);
-        background:rgba(37,208,122,.1);padding:4px 10px;border-radius:20px;margin-top:6px}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.2s infinite}
-  @keyframes blink{50%{opacity:.2}}
-  .time{font-family:monospace;font-size:12px;color:var(--muted);margin-top:4px}
+  
+  .horizontal-panels{display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start}
+  @media(max-width:900px){.horizontal-panels{grid-template-columns:1fr}}
+  
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+  .panel h4{font-size:12px;letter-spacing:2px;color:var(--blue);margin-bottom:15px;font-weight:700}
 
-  .volstrip{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}
-  .volstrip .pill{font-size:11px;padding:6px 14px}
-
-  .grid2{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
-  @media(max-width:900px){.grid2{grid-template-columns:1fr}}
-
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;backdrop-filter:blur(10px)}
-  .panel h4{font-size:12px;letter-spacing:2px;color:#9ec5ff;margin-bottom:12px;font-weight:700}
-
-  .digits{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-  .digit{aspect-ratio:1;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;
-         justify-content:center;font-size:20px;font-weight:800;background:rgba(5,12,30,.7);
-         cursor:pointer;transition:.2s;position:relative}
+  /* TRADING ELEMENTS */
+  .digits{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:15px}
+  .digit{aspect-ratio:1;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;background:var(--card-bg);cursor:pointer;transition:.2s;color:var(--txt)}
   .digit:hover{border-color:var(--blue);transform:translateY(-2px)}
-  .digit.win{background:rgba(37,208,122,.2);border-color:var(--green);color:var(--green)}
-  .digit.lose{background:rgba(255,47,90,.18);border-color:var(--red);color:var(--red)}
+  .digit.selected{background:rgba(47,123,255,.2);border-color:var(--blue);color:var(--blue)}
+  
+  .row{display:flex;gap:15px;margin-bottom:15px}
+  .field{flex:1}
+  .field label{font-size:11px;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:6px}
+  .field input{margin:0;font-size:16px;font-weight:700;text-align:center}
 
-  .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-  .field{flex:1;min-width:110px}
-  .field label{font-size:10px;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:5px}
-  .field input{margin:0;font-size:15px;font-weight:700;text-align:center}
+  .tradebtns{display:flex;gap:12px;margin-top:15px}
+  .btn-green{background:linear-gradient(135deg,#25d07a,#12915a);color:#03170e;flex:1;padding:16px;font-size:15px;box-shadow:0 8px 24px rgba(37,208,122,.3)}
+  .btn-red{background:linear-gradient(135deg,#ff2f5a,#b3103a);color:#fff;flex:1;padding:16px;font-size:15px;box-shadow:0 8px 24px rgba(255,47,90,.3)}
 
-  .ou{display:flex;gap:12px;margin-top:16px}
-  .ou .sidebox{flex:1;border-radius:14px;padding:14px;text-align:center;border:1px solid var(--line);
-               background:rgba(5,12,30,.6)}
-  .ou .sidebox b{font-size:26px;display:block;margin:6px 0}
-  .ou .over b{color:var(--green)}
-  .ou .under b{color:var(--red)}
-  .cursorline{height:36px;border-radius:10px;background:rgba(5,12,30,.8);position:relative;
-              margin-top:12px;overflow:hidden;border:1px solid var(--line)}
-  .cursorline .g{position:absolute;left:0;top:0;bottom:0;width:50%;background:linear-gradient(90deg,rgba(37,208,122,.4),rgba(37,208,122,.05))}
-  .cursorline .r{position:absolute;right:0;top:0;bottom:0;width:50%;background:linear-gradient(270deg,rgba(255,47,90,.4),rgba(255,47,90,.05))}
-  .cursor{position:absolute;top:0;bottom:0;width:3px;background:#fff;box-shadow:0 0 14px #fff;
-          animation:scan 2.6s ease-in-out infinite alternate}
-  @keyframes scan{from{left:5%}to{left:92%}}
+  /* CHAT & BOT BUILDER SPECIFIC */
+  .chat-box{display:flex;flex-direction:column;height:400px}
+  .chat-msgs{flex:1;overflow-y:auto;background:var(--card-bg);border-radius:10px;padding:10px;margin-bottom:10px;font-size:13px;line-height:1.6;border:1px solid var(--line)}
+  .msg{padding:8px 12px;border-radius:8px;margin-bottom:8px;background:rgba(47,123,255,.1);border-left:3px solid var(--blue)}
+  
+  .builder-blocks{display:flex;flex-direction:column;gap:10px;background:var(--card-bg);padding:15px;border-radius:10px;border:1px dashed var(--line);margin-bottom:15px}
+  .block{background:var(--blue);color:#fff;padding:10px 15px;border-radius:8px;cursor:grab;font-size:13px;font-weight:600;display:flex;justify-content:space-between}
 
-  .tradebtns{display:flex;gap:10px;margin-top:16px}
-  .tradebtns .btn{flex:1;padding:14px;font-size:14px}
-  .btn-green{background:linear-gradient(135deg,#25d07a,#12915a);color:#03170e;box-shadow:0 8px 24px rgba(37,208,122,.35)}
-  .btn-red{background:linear-gradient(135deg,#ff2f5a,#b3103a);color:#fff;box-shadow:0 8px 24px rgba(255,47,90,.35)}
-
-  .quick{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-  .quick button{background:rgba(5,12,30,.7);border:1px solid var(--line);border-radius:12px;
-                padding:12px;text-align:left;color:#cfe0ff;cursor:pointer;transition:.2s;font-size:12px}
-  .quick button:hover{border-color:var(--blue);background:rgba(47,123,255,.12)}
-  .quick b{display:block;font-size:13px;color:#fff;margin-top:4px}
-
-  .ai-btn{position:fixed;right:22px;bottom:22px;width:66px;height:66px;border-radius:50%;border:none;
-          cursor:pointer;background:radial-gradient(circle at 30% 30%,#7ec8ff,var(--blue) 60%,#0a1a3f);
-          box-shadow:0 0 0 0 rgba(47,123,255,.7);animation:aipulse 2s infinite;z-index:50;
-          color:#fff;font-weight:900;font-size:22px}
-  @keyframes aipulse{70%{box-shadow:0 0 0 22px rgba(47,123,255,0)}100%{box-shadow:0 0 0 0 rgba(47,123,255,0)}}
-
-  #toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);
-         background:linear-gradient(135deg,var(--blue),#1b4fd8);color:#fff;padding:12px 22px;border-radius:12px;
-         font-size:13px;font-weight:700;letter-spacing:1px;opacity:0;pointer-events:none;transition:.3s;z-index:200;
-         box-shadow:0 12px 40px rgba(47,123,255,.5);white-space:nowrap}
+  /* NOTIFICATION TOAST */
+  #toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:var(--blue);color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:.3s;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.3)}
   #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-
-  .acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:12px}
-  .acc-grid .pill{padding:14px;text-align:center;font-size:12px}
-
-  ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:rgba(90,150,255,.3);border-radius:8px}
 </style>
 </head>
 <body>
 
-<div id="bg">
-  <div class="orb b"></div><div class="orb r"></div>
-  <span class="satellite" style="top:12%;left:8%">🛰️</span>
-  <span class="satellite" style="top:30%;right:6%;animation-delay:-8s">🛰️</span>
-  <div class="room">
-    <div class="monitor">
-      <div class="bar"></div>
-      <div class="candles"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="bot">🤖 AUTOMATED BOT — RUNNING</div>
-    </div>
-    <div class="laptop">
-      <div class="line" style="top:14px"></div><div class="line" style="top:26px;width:60%"></div>
-      <div class="line" style="top:38px"></div><div class="line" style="top:50px;width:75%"></div>
-      <div style="position:absolute;bottom:10px;left:10px;font-size:10px;color:#ff9ab0">📊 TRADING HUB</div>
-    </div>
-  </div>
-</div>
-
-<div class="splash on" id="splash">
+<!-- SPLASH -->
+<div class="splash" id="splash">
   <div class="logo" id="splashTitle">VECTORMASHER</div>
   <div class="sub" id="splashMsg">PLEASE WAIT WHILE WE CONNECT TO SERVER…</div>
   <div class="bar-wrap"><div class="bar-fill" id="bar1"></div></div>
   <div class="pct" id="pct1">0%</div>
-  <div class="seq" id="seq1"></div>
 </div>
 
+<!-- WELCOME -->
 <div class="welcome" id="welcome">
   <div class="wgrid">
     <div class="wleft">
       <h1>VECTORMASHER</h1>
       <div class="pow">POWERED BY DERIV</div>
-      <p class="tag">Everything you need to trade the world's markets — in one clean, free workspace.</p>
+      <p style="margin-top:20px;color:var(--muted)">Everything you need to trade the world's markets — in one clean, free workspace.</p>
       <div class="wbtns">
-        <button class="btn btn-primary" onclick="openDeriv('login')">LOG IN</button>
-        <button class="btn btn-outline" onclick="openDeriv('signup')">GET STARTED</button>
+        <button class="btn btn-primary" onclick="login()">LOG IN</button>
+        <button class="btn btn-outline" onclick="login()">GET STARTED</button>
       </div>
     </div>
     <div>
-      <div class="card" style="margin-bottom:14px">
-        <h3>LOG IN</h3>
-        <input id="loginEmail" placeholder="Email" type="email"/>
-        <input id="loginPass" placeholder="Password" type="password"/>
-        <button class="btn btn-primary" style="width:100%" onclick="openDeriv('login')">SIGN IN VIA DERIV</button>
-        <div class="mini" style="margin-top:8px">Secure OAuth — we never store your password.</div>
-      </div>
       <div class="card">
-        <h3>CREATE FREE ACCOUNT</h3>
-        <div class="mini">New here? Open a free Deriv account in seconds and start with a demo balance.</div>
-        <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="openDeriv('signup')">CREATE ACCOUNT</button>
+        <h3>LOG IN VIA DERIV</h3>
+        <input type="email" placeholder="Email" />
+        <input type="password" placeholder="Password" />
+        <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="login()">SECURE SIGN IN</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="onboard" id="onboard">
-  <div class="onbox">
-    <h2>EVERYTHING IN ONE WORKING SPACE<br/>FREE TO USE</h2>
-    <p>BOTS · SIGNALS · MANUAL TRADING · COPY TRADE · ACCUMULATORS</p>
-    <button class="btn btn-primary" onclick="enterApp()">ENTER WORKSPACE →</button>
-  </div>
-</div>
-
+<!-- MAIN APP -->
 <div id="app">
   <div class="topbar">
     <span class="brand">VECTORMASHER</span>
-    <button class="pill" id="themeBtn" onclick="toggleTheme(this)">🌙</button>
-    <span class="boxed">D-R</span>
-    <button class="pill" id="curBtn" onclick="toggleCurrency(this)">KES</button>
-    <div class="switch" id="modeSwitch" onclick="toggleMode(this)">
+    <button class="pill" id="themeBtn" onclick="toggleTheme()">🌙</button>
+    <button class="pill" id="curBtn" onclick="toggleCurrency()">KES</button>
+    <div class="switch" id="modeSwitch" onclick="toggleMode()">
       <div class="knob">DEMO</div>
     </div>
-    <div class="spacer"></div>
+    <div style="flex:1"></div>
     <span class="pill" style="color:var(--green)">● CONNECTED</span>
   </div>
 
   <div class="layout">
-    <div class="side" id="sidebar"></div>
-    <div class="main" id="main"></div>
+    <div class="side" id="sidebar">
+      <!-- Sidebar injected by JS -->
+    </div>
+    <div class="main" id="main">
+      <!-- Main content injected by JS -->
+    </div>
   </div>
 </div>
 
-<button class="ai-btn" id="aiBtn" onclick="shout('AI ASSISTANT ACTIVATED')">AI</button>
 <div id="toast"></div>
 
 <script>
-/* ================= SHOUT-OUT (every button) ================= */
+// --- STATE MANAGEMENT ---
+let state = {
+  theme: 'dark',
+  currency: 'KES',
+  mode: 'DEMO',
+  balance: 10000,
+  view: 'dashboard',
+  activeVol: 'VOL 75'
+};
+
 function shout(msg){
   const t=document.getElementById('toast');
   t.innerText=msg.toUpperCase();t.classList.add('on');
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1600);
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2000);
 }
-document.addEventListener('click',e=>{
-  const b=e.target.closest('button');
-  if(!b) return;
-  if(b.id==='aiBtn') return;
-  const label=b.innerText.trim().replace(/\s+/g,' ');
-  if(label && !b.onclick) shout(label+' — OK');
-});
 
-/* ================= STEP 2 & 3: SPLASH SEQUENCE (ULTRA FAST) ================= */
-const seq2=["BOOTING NODE…","HANDSHAKE…","LOADING ENGINE…","CONNECTING WS…","READY"];
-const seq3=["INITIALIZING D-BOT…","LOADING STRATEGIES…","CALIBRATING…","D-BOT ONLINE…"];
-
-function runSplash(title,msg,seqArr,next){
-  document.getElementById('splashTitle').innerText=title;
-  document.getElementById('splashMsg').innerText=msg;
-  const bar=document.getElementById('bar1'),pct=document.getElementById('pct1'),seq=document.getElementById('seq1');
-  bar.style.width='0%';pct.innerText='0%';let p=0,i=0;
+// --- SPLASH SEQUENCE ---
+let progress = 0;
+const splashTimer = setInterval(() => {
+  progress += Math.random() * 20 + 10;
+  if(progress > 100) progress = 100;
+  document.getElementById('bar1').style.width = progress + '%';
+  document.getElementById('pct1').innerText = Math.floor(progress) + '%';
   
-  // FAST TIMER: Jumps 10-25% every 40ms. Takes ~1 second per screen.
-  const timer=setInterval(()=>{
-    p += Math.floor(Math.random() * 15) + 10; 
-    if(p>100) p=100;
-    bar.style.width=p+'%'; pct.innerText=p+'%';
-    const si=Math.min(seqArr.length-1,Math.floor(p/100*seqArr.length));
-    if(si!==i){i=si;seq.innerText=seqArr[si];}
-    if(p>=100){
-      clearInterval(timer); seq.innerText='✔ COMPLETE';
-      setTimeout(next, 200); // Move on very quickly
-    }
-  }, 40); 
+  if(progress >= 100) {
+    clearInterval(splashTimer);
+    setTimeout(() => {
+      document.getElementById('splash').classList.add('hide');
+      document.getElementById('welcome').classList.add('on');
+    }, 300);
+  }
+}, 40);
+
+// --- LOGIN & APP START ---
+function login() {
+  shout('CONNECTING TO DERIV OAUTH...');
+  setTimeout(() => {
+    document.getElementById('welcome').classList.remove('on');
+    document.getElementById('app').classList.add('on');
+    buildSidebar();
+    renderView();
+    shout('WELCOME TO YOUR WORKSPACE');
+  }, 800);
 }
 
-/* boot: splash 2 → splash 3 → welcome */
-runSplash("VECTORMASHER","PLEASE WAIT WHILE WE CONNECT TO SERVER…",seq2,()=>{
-  runSplash("VECTORMASHER","INITIALIZING D-BOT…",seq3,()=>{
-    document.getElementById('splash').classList.remove('on');
-    document.getElementById('welcome').classList.add('on');
-  });
-});
-
-/* ================= LOGIN / SIGNUP ================= */
-const APP_ID="YOUR_APP_ID"; 
-function openDeriv(mode){
-  shout(mode==='login'?'OPENING DERIV LOGIN':'OPENING DERIV SIGN-UP');
-  const url = mode==='login'
-    ? `https://oauth.deriv.com/oauth2/authorize?app_id=${APP_ID}`
-    : `https://deriv.com/signup`;
-  window.open(url,'_blank');
-  setTimeout(()=>{document.getElementById('welcome').classList.remove('on');
-                  document.getElementById('onboard').classList.add('on');},1200);
+// --- TOP BAR CONTROLS ---
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  document.body.classList.toggle('light-mode', state.theme === 'light');
+  document.getElementById('themeBtn').innerText = state.theme === 'dark' ? '🌙' : '🌞';
+  shout(state.theme.toUpperCase() + ' MODE ACTIVATED');
 }
 
-/* ================= ENTER APP ================= */
-function enterApp(){
-  document.getElementById('onboard').classList.remove('on');
-  document.getElementById('app').classList.add('on');
-  buildSidebar(); showView('dashboard'); startClock();
-  shout('WELCOME TO VECTORMASHER');
+function toggleCurrency() {
+  state.currency = state.currency === 'KES' ? 'USD' : 'KES';
+  document.getElementById('curBtn').innerText = state.currency;
+  shout('CURRENCY SWITCHED TO ' + state.currency);
+  renderView(); // Re-render to update balances
 }
 
-/* ================= TOP BAR TOGGLES ================= */
-let dark=true;
-function toggleTheme(btn){
-  dark=!dark;
-  btn.innerText=dark?'🌙':'🌞';
-  document.documentElement.style.setProperty('--bg',dark?'#050a18':'#eaf1ff');
-  document.body.style.color=dark?'#e8f1ff':'#0a1a3f';
-  shout(dark?'DARK MODE':'DAY MODE');
-}
-let kes=true;
-function toggleCurrency(btn){
-  kes=!kes;btn.innerText=kes?'KES':'USD';
-  shout('CURRENCY: '+(kes?'KENYAN SHILLING':'US DOLLAR'));
-  renderMain();
-}
-let real=false;
-function toggleMode(el){
-  real=!real;
-  el.classList.toggle('real',real);
-  el.querySelector('.knob').innerText=real?'REAL':'DEMO';
-  shout(real?'SWITCHED TO REAL ACCOUNT':'SWITCHED TO DEMO ACCOUNT');
+function toggleMode() {
+  state.mode = state.mode === 'DEMO' ? 'REAL' : 'DEMO';
+  const sw = document.getElementById('modeSwitch');
+  sw.classList.toggle('real', state.mode === 'REAL');
+  sw.querySelector('.knob').innerText = state.mode;
+  shout('SWITCHED TO ' + state.mode + ' ACCOUNT');
+  renderView();
 }
 
-/* ================= SIDEBAR ================= */
-const MENU=[
-  ['Dashboard','dashboard'],['Bot Builder','builder'],['Free Bots','freebots'],
-  ['Premium AI Bot','premium'],['Signal AI Bot','signals'],['Manual Trader','manual'],
-  ['Bulk Trader','bulk'],['Copy Trade','copy'],['Automated','auto'],
-  ['Speed Bot','speed'],['Chat','chat'],['Accumulator','acc']
+// --- SIDEBAR & VIEW ROUTING ---
+const menuItems = [
+  ['Dashboard', 'dashboard'], ['Bot Builder', 'builder'], ['Free Bots', 'bots'],
+  ['Premium AI', 'premium'], ['Signal AI', 'signals'], ['Manual Trader', 'manual'],
+  ['Bulk Trader', 'bulk'], ['Copy Trade', 'copy'], ['Speed Bot', 'speed'],
+  ['Accumulator', 'acc'], ['Chat', 'chat']
 ];
-function buildSidebar(){
-  const s=document.getElementById('sidebar');
-  s.innerHTML='<div class="sec">TRADING</div>'+
-    MENU.map(([n,k])=>`<button data-k="${k}" onclick="showView('${k}',this)">${n}</button>`).join('');
-}
-let currentView='dashboard';
-function showView(k,btn){
-  currentView=k;
-  document.querySelectorAll('#sidebar button').forEach(b=>b.classList.toggle('active',b.dataset.k===k));
-  shout(MENU.find(m=>m[1]===k)[0].toUpperCase());
-  renderMain();
+
+function buildSidebar() {
+  const s = document.getElementById('sidebar');
+  s.innerHTML = menuItems.map(([name, key]) => 
+    `<button id="nav-${key}" onclick="changeView('${key}')">${name}</button>`
+  ).join('');
 }
 
-/* ================= GREETING ================= */
-function greetWord(){
-  const h=new Date().getHours();
-  if(h<12) return 'GOOD MORNING';
-  if(h<17) return 'GOOD AFTERNOON';
-  return 'GOOD EVENING';
-}
-let clockTimer;
-function startClock(){
-  clearInterval(clockTimer);
-  clockTimer=setInterval(()=>{
-    const el=document.getElementById('liveTime');
-    if(el) el.innerText=new Date().toLocaleTimeString();
-    const g=document.getElementById('greetWord');
-    if(g) g.innerText=greetWord();
-  },1000);
+function changeView(key) {
+  state.view = key;
+  document.querySelectorAll('.side button').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + key).classList.add('active');
+  renderView();
+  shout(menuItems.find(m => m[1] === key)[0].toUpperCase() + ' LOADED');
 }
 
-/* ================= MAIN VIEWS ================= */
-function money(v){return (kes?'KES ':'$ ')+(kes?(v*130).toFixed(0):v.toFixed(2));}
+function renderView() {
+  const m = document.getElementById('main');
+  const cur = state.currency;
+  const bal = state.mode === 'DEMO' ? state.balance : 0;
+  
+  const header = `
+    <div class="greet"><span>GOOD DAY</span>, TRADER 👋</div>
+    <div style="margin-bottom:20px; font-size:13px; color:var(--muted)">
+      Market: <b>${state.activeVol}</b> | Balance: <b style="color:var(--green)">${cur} ${bal.toLocaleString()}</b> (${state.mode})
+    </div>
+  `;
 
-function renderMain(){
-  const m=document.getElementById('main');
-  if(currentView==='acc'){ m.innerHTML=accView(); return; }
-  if(currentView==='chat'){ m.innerHTML=chatView(); return; }
-  m.innerHTML=traderView(currentView); 
-}
-
-function traderView(k){
-  return `
-  <div class="greet"><span id="greetWord">${greetWord()}</span>, TRADER 👋</div>
-  <div class="live"><span class="dot"></span> MARKET LIVE</div>
-  <div class="time">🕒 <span id="liveTime">${new Date().toLocaleTimeString()}</span></div>
-
-  <div class="volstrip">
-    ${['VOL 10','VOL 25','VOL 50','VOL 100'].map((v,i)=>
-      `<button class="pill ${i===2?'active':''}" onclick="pickVol('${v}',this)">${v}</button>`).join('')}
-  </div>
-
-  <div class="grid2">
-    <div>
+  if (state.view === 'dashboard' || state.view === 'manual' || state.view === 'speed') {
+    m.innerHTML = header + `
+      <div class="horizontal-panels">
+        <!-- LEFT: Trading -->
+        <div class="panel">
+          <h4>DIGIT TRADING (0-9)</h4>
+          <div class="digits">
+            ${[0,1,2,3,4,5,6,7,8,9].map(d => `<div class="digit" onclick="selectDigit(this)">${d}</div>`).join('')}
+          </div>
+          <div class="row">
+            <div class="field"><label>STAKE (${cur})</label><input type="number" id="stakeInput" value="100" /></div>
+            <div class="field"><label>TICKS</label><input type="number" value="5" /></div>
+          </div>
+          <div class="tradebtns">
+            <button class="btn btn-green" onclick="executeTrade('OVER')">BUY OVER</button>
+            <button class="btn btn-red" onclick="executeTrade('UNDER')">BUY UNDER</button>
+          </div>
+        </div>
+        <!-- RIGHT: Info -->
+        <div class="panel">
+          <h4>QUICK ACTIONS</h4>
+          <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="shout('MANUAL TRADING SELECTED')">★ MANUAL TRADING</button>
+          <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="shout('LOAD BOT SELECTED')">02 LOAD BOT</button>
+          <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="shout('SPEED BOT SELECTED')">03 SPEED BOT</button>
+          <button class="btn btn-outline" style="width:100%" onclick="shout('PREMIUM BOT SELECTED')">04 PREMIUM BOT</button>
+        </div>
+      </div>
+    `;
+  } 
+  else if (state.view === 'chat') {
+    m.innerHTML = header + `
+      <div class="panel" style="max-width:800px">
+        <h4>LIVE TRADER CHAT</h4>
+        <div class="chat-box">
+          <div class="chat-msgs" id="chatBox">
+            <div class="msg"><b>Mod:</b> Welcome to VECTORMASHER!</div>
+            <div class="msg"><b>Trader99:</b> Anyone using VOL 100 today?</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <input type="text" id="chatInput" placeholder="Type message..." style="margin:0" onkeypress="if(event.key==='Enter') sendChat()" />
+            <button class="btn btn-primary" onclick="sendChat()">SEND</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  else if (state.view === 'builder') {
+    m.innerHTML = header + `
+      <div class="horizontal-panels">
+        <div class="panel">
+          <h4>BOT BUILDER</h4>
+          <div class="builder-blocks" id="builderArea">
+            <div class="block">IF RSI < 30 <span onclick="this.parentElement.remove()" style="cursor:pointer">✖</span></div>
+          </div>
+          <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="addBlock('IF RSI > 70')">+ Add Condition</button>
+          <button class="btn btn-green" style="width:100%" onclick="shout('BOT RUNNING SUCCESSFULLY!')">RUN BOT</button>
+        </div>
+        <div class="panel">
+          <h4>AVAILABLE BLOCKS</h4>
+          <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="addBlock('BUY OVER')">BUY OVER</button>
+          <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="addBlock('BUY UNDER')">BUY UNDER</button>
+        </div>
+      </div>
+    `;
+  }
+  else if (state.view === 'acc') {
+     m.innerHTML = header + `
       <div class="panel">
-        <h4>DIGIT DISTRIBUTION — 0 TO 9</h4>
-        <div class="digits" id="digits">
-          ${[0,1,2,3,4,5,6,7,8,9].map(d=>`<div class="digit" onclick="tapDigit(${d},this)">${d}</div>`).join('')}
+        <h4>ACCUMULATOR SETTINGS</h4>
+        <div class="row" style="margin-top:20px">
+          <button class="pill" onclick="shout('GROWTH 1%')">GROWTH 1%</button>
+          <button class="pill" onclick="shout('GROWTH 2%')">GROWTH 2%</button>
+          <button class="pill" onclick="shout('GROWTH 3%')">GROWTH 3%</button>
         </div>
-        <div class="row">
-          <div class="field"><label>NUMBER OF TICKS</label><input id="ticks" type="number" value="5" min="1" max="10"/></div>
-          <div class="field"><label>STAKE (${kes?'KES':'USD'})</label><input id="stake" type="number" value="${kes?130:1}"/></div>
-        </div>
-        <div class="ou">
-          <div class="sidebox over"><span>OVER</span><b>52%</b><div class="mini">payout 0.94x</div></div>
-          <div class="sidebox under"><span>UNDER</span><b>48%</b><div class="mini">payout 0.91x</div></div>
-        </div>
-        <div class="cursorline"><div class="g"></div><div class="r"></div><div class="cursor"></div></div>
-        <div class="tradebtns">
-          <button class="btn btn-green" onclick="placeTrade('OVER')">BUY OVER</button>
-          <button class="btn btn-red" onclick="placeTrade('UNDER')">BUY UNDER</button>
-        </div>
+        <button class="btn btn-green" style="width:100%;margin-top:30px" onclick="shout('ACCUMULATOR STARTED')">START ACCUMULATOR</button>
       </div>
-
-      <div class="panel" style="margin-top:14px">
-        <h4>QUICK ACTIONS</h4>
-        <div class="quick">
-          <button onclick="shout('MANUAL TRADING OPENED')">MANUAL TRADING — POPULAR ⭐<b>01</b></button>
-          <button onclick="shout('LOAD BOT OPENED')">LOAD BOT<b>02</b></button>
-          <button onclick="shout('SPEED BOT OPENED')">SPEED BOT<b>03</b></button>
-          <button onclick="shout('PREMIUM BOT OPENED')">PREMIUM BOT<b>04</b></button>
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <div class="panel">
-        <h4>${MENU.find(m=>m[1]===k)?MENU.find(m=>m[1]===k)[0].toUpperCase():'WORKSPACE'}</h4>
-        <div class="mini">Market: <b style="color:#fff">Volatility 75 (1s)</b></div>
-        <div class="mini" style="margin-top:6px">Balance: <b style="color:var(--green)">${money(real?0:10000)}</b> ${real?'REAL':'DEMO'}</div>
-        <div class="mini" style="margin-top:6px">Status: <b style="color:var(--green)">CONNECTED</b></div>
-      </div>
-      <div class="panel" style="margin-top:14px">
-        <h4>AI SIGNAL</h4>
-        <div class="mini">Model confidence: <b style="color:var(--blue)">87%</b></div>
-        <div class="mini" style="margin-top:6px">Suggested: <b style="color:var(--green)">OVER 4</b></div>
-        <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="shout('AI SIGNAL APPLIED')">APPLY SIGNAL</button>
-      </div>
-    </div>
-  </div>`;
+     `;
+  }
+  else {
+    m.innerHTML = header + `<div class="panel"><h4>${state.view.toUpperCase()}</h4><p style="color:var(--muted)">This module is loading. Please wait.</p></div>`;
+  }
 }
 
-function accView(){
-  return `
-  <div class="greet"><span id="greetWord">${greetWord()}</span>, TRADER 👋</div>
-  <div class="live"><span class="dot"></span> ACCUMULATOR LIVE</div>
-  <div class="time">🕒 <span id="liveTime">${new Date().toLocaleTimeString()}</span></div>
-
-  <div class="volstrip">
-    ${['VOL 10','VOL 25','VOL 50','VOL 100'].map((v,i)=>
-      `<button class="pill ${i===3?'active':''}" onclick="pickVol('${v}',this)">${v}</button>`).join('')}
-  </div>
-
-  <div class="panel">
-    <h4>ACCUMULATOR OPTIONS (OVER / UNDER HIDDEN)</h4>
-    <div class="acc-grid">
-      <button class="pill" onclick="shout('GROWTH RATE 1%')">GROWTH 1%</button>
-      <button class="pill" onclick="shout('GROWTH RATE 2%')">GROWTH 2%</button>
-      <button class="pill" onclick="shout('GROWTH RATE 3%')">GROWTH 3%</button>
-      <button class="pill" onclick="shout('GROWTH RATE 5%')">GROWTH 5%</button>
-      <button class="pill" onclick="shout('STAKE SET')">SET STAKE</button>
-      <button class="pill" onclick="shout('TAKE PROFIT')">TAKE PROFIT</button>
-      <button class="pill" onclick="shout('STOP LOSS')">STOP LOSS</button>
-      <button class="pill" onclick="shout('MAX TICKS')">MAX TICKS</button>
-    </div>
-    <div class="row" style="margin-top:14px">
-      <div class="field"><label>STAKE (${kes?'KES':'USD'})</label><input type="number" value="${kes?130:1}"/></div>
-      <div class="field"><label>GROWTH %</label><input type="number" value="3"/></div>
-    </div>
-    <div class="tradebtns">
-      <button class="btn btn-green" onclick="shout('ACCUMULATOR STARTED')">START ACCUMULATOR</button>
-      <button class="btn btn-outline" onclick="shout('ACCUMULATOR STOPPED')">STOP</button>
-    </div>
-  </div>`;
+// --- ACTIONS ---
+function selectDigit(el) {
+  document.querySelectorAll('.digit').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  shout('DIGIT ' + el.innerText + ' LOCKED');
 }
 
-function chatView(){
-  return `
-  <div class="greet"><span id="greetWord">${greetWord()}</span>, TRADER 👋</div>
-  <div class="live"><span class="dot"></span> LIVE CHAT</div>
-  <div class="panel" style="margin-top:14px;height:60vh;display:flex;flex-direction:column">
-    <h4>TRADER CHAT</h4>
-    <div style="flex:1;overflow-y:auto;font-size:13px;line-height:1.9">
-      <div><b style="color:var(--blue)">Mod:</b> Welcome to VECTORMASHER 👋</div>
-      <div><b style="color:var(--green)">Ken:</b> VOL 75 is trending today</div>
-      <div><b style="color:var(--red)">Amina:</b> Hit +KES 2,400 with the speed bot</div>
-      <div><b style="color:var(--blue)">Yusuf:</b> Anyone testing accumulator?</div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <input placeholder="Type a message…" style="margin:0"/>
-      <button class="btn btn-primary" onclick="shout('MESSAGE SENT')">SEND</button>
-    </div>
-  </div>`;
+function executeTrade(type) {
+  const stake = parseFloat(document.getElementById('stakeInput').value) || 100;
+  if (state.mode === 'REAL' && state.balance < stake) {
+    return shout('INSUFFICIENT BALANCE');
+  }
+  
+  if (state.mode === 'DEMO') {
+    // Simulate win/loss
+    const win = Math.random() > 0.5;
+    if (win) {
+      state.balance += stake * 0.9;
+      shout('WIN! +' + state.currency + ' ' + (stake * 0.9));
+    } else {
+      state.balance -= stake;
+      shout('LOSS -' + state.currency + ' ' + stake);
+    }
+    renderView();
+  } else {
+    shout('REAL TRADE PLACED: ' + type);
+  }
 }
 
-/* ================= INTERACTIONS ================= */
-function pickVol(v,btn){
-  document.querySelectorAll('.volstrip .pill').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  shout('MARKET CHANGED TO '+v);
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const box = document.getElementById('chatBox');
+  if (input.value.trim() !== '') {
+    box.innerHTML += `<div class="msg" style="border-left-color:var(--green)"><b>You:</b> ${input.value}</div>`;
+    input.value = '';
+    box.scrollTop = box.scrollHeight;
+    shout('MESSAGE SENT');
+  }
 }
-function tapDigit(d,el){
-  shout('DIGIT '+d+' SELECTED');
-  el.classList.toggle('win');
-  setTimeout(()=>el.classList.remove('win'),800);
+
+function addBlock(text) {
+  const area = document.getElementById('builderArea');
+  area.innerHTML += `<div class="block">${text} <span onclick="this.parentElement.remove()" style="cursor:pointer">✖</span></div>`;
+  shout('BLOCK ADDED: ' + text);
 }
-function placeTrade(dir){
-  const stake=document.getElementById('stake')?.value||1;
-  shout('ORDER PLACED: '+dir+' · STAKE '+stake);
-  document.querySelectorAll('.digit').forEach(d=>{
-    d.classList.remove('win','lose');
-    if(Math.random()<0.15) d.classList.add(Math.random()<0.5?'win':'lose');
-  });
-}
+
+// Initialize Sidebar active state on first load
+document.addEventListener('DOMContentLoaded', () => {
+  // Splash runs automatically
+});
 </script>
 </body>
 </html>
