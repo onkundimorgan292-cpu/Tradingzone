@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>VECTORMASHER — Powered by Deriv</title>
+<style>
+  :root{
+    --blue:#2f7bff; --blue-2:#0a1a3f; --red:#ff2f5a;
+    --bg:#050a18; --panel:rgba(10,22,48,.72); --line:rgba(90,150,255,.25);
+    --txt:#e8f1ff; --muted:#8aa5cc; --green:#25d07a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:var(--bg);color:var(--txt);overflow:hidden;height:100vh}
+
+  /* ================= STEP 1: ANIMATED TECH-ROOM BACKGROUND ================= */
+  #bg{position:fixed;inset:0;z-index:-2;overflow:hidden;
+      background:radial-gradient(ellipse at 20% 20%,rgba(47,123,255,.35),transparent 55%),
+                 radial-gradient(ellipse at 85% 80%,rgba(255,47,90,.28),transparent 55%),
+                 radial-gradient(ellipse at 50% 50%,#0a1530,#050a18 80%)}
+  #bg::after{content:"";position:absolute;inset:0;
+      background-image:linear-gradient(rgba(90,150,255,.06) 1px,transparent 1px),
+                       linear-gradient(90deg,rgba(90,150,255,.06) 1px,transparent 1px);
+      background-size:44px 44px;animation:grid 18s linear infinite}
+  @keyframes grid{to{background-position:44px 44px,44px 44px}}
+  .orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;animation:float 14s ease-in-out infinite}
+  .orb.b{background:var(--blue);width:340px;height:340px;top:-80px;left:-60px}
+  .orb.r{background:var(--red);width:300px;height:300px;bottom:-90px;right:-70px;animation-delay:-6s}
+  @keyframes float{50%{transform:translate(40px,-30px) scale(1.1)}}
+
+  /* tech room: big monitor (bot) + small laptop (trading hub) */
+  .room{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);
+        width:min(900px,92vw);display:flex;gap:24px;align-items:flex-end;opacity:.55}
+  .monitor{flex:1;aspect-ratio:16/10;border:3px solid rgba(90,150,255,.5);border-radius:14px;
+        background:linear-gradient(160deg,#071026,#0b1c3d);position:relative;overflow:hidden;
+        box-shadow:0 0 60px rgba(47,123,255,.4),inset 0 0 40px rgba(47,123,255,.15);
+        animation:pulseM 3s ease-in-out infinite}
+  @keyframes pulseM{50%{box-shadow:0 0 90px rgba(47,123,255,.7),inset 0 0 50px rgba(47,123,255,.25)}}
+  .monitor .bar{position:absolute;left:10px;right:10px;top:10px;height:6px;border-radius:3px;
+        background:linear-gradient(90deg,var(--blue),var(--red));opacity:.8}
+  .monitor .bot{position:absolute;left:14px;bottom:14px;font-size:11px;color:#7ec8ff;letter-spacing:1px}
+  .monitor .candles{position:absolute;bottom:30px;left:14px;right:14px;height:55%;display:flex;align-items:flex-end;gap:5px}
+  .candles i{flex:1;background:linear-gradient(var(--green),transparent);border-radius:2px;animation:grow 2s ease-in-out infinite alternate}
+  .candles i:nth-child(even){background:linear-gradient(var(--red),transparent)}
+  @keyframes grow{to{transform:scaleY(.45)}}
+  .laptop{width:32%;aspect-ratio:16/10;border:3px solid rgba(255,47,90,.55);border-radius:10px;
+        background:linear-gradient(160deg,#1a0710,#3d0b1c);position:relative;overflow:hidden;
+        box-shadow:0 0 45px rgba(255,47,90,.4);animation:pulseL 3.5s ease-in-out infinite}
+  @keyframes pulseL{50%{box-shadow:0 0 70px rgba(255,47,90,.7)}}
+  .laptop .line{position:absolute;left:8px;right:8px;height:4px;border-radius:2px;background:rgba(255,120,150,.6);animation:slide 3s linear infinite}
+  @keyframes slide{to{transform:translateX(20px)}}
+  .satellite{position:absolute;font-size:26px;opacity:.5;animation:orbit 22s linear infinite}
+  @keyframes orbit{from{transform:rotate(0) translateX(240px) rotate(0)}to{transform:rotate(360deg) translateX(240px) rotate(-360deg)}}
+
+  /* ================= SPLASH SCREENS ================= */
+  .splash{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+          z-index:100;background:rgba(5,10,24,.94);backdrop-filter:blur(6px)}
+  .splash.on{display:flex}
+  .logo{font-size:clamp(28px,6vw,54px);font-weight:900;letter-spacing:6px;
+        background:linear-gradient(90deg,var(--blue),#fff,var(--red));
+        -webkit-background-clip:text;background-clip:text;color:transparent;
+        animation:shine 2.5s linear infinite;background-size:200% auto}
+  @keyframes shine{to{background-position:200% center}}
+  .sub{color:var(--muted);letter-spacing:3px;font-size:12px;margin-top:10px;text-align:center}
+  .bar-wrap{width:min(420px,80vw);height:8px;background:rgba(90,150,255,.15);border-radius:8px;margin-top:26px;overflow:hidden}
+  .bar-fill{height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .12s linear}
+  .pct{margin-top:10px;font-size:13px;color:#9ec5ff;letter-spacing:2px}
+  .seq{margin-top:6px;font-size:11px;color:var(--muted);font-family:monospace;height:16px}
+
+  /* ================= WELCOME (STEP 4) ================= */
+  .welcome{position:fixed;inset:0;display:none;z-index:90;background:rgba(5,10,24,.9);backdrop-filter:blur(8px);
+           align-items:center;justify-content:center;padding:20px}
+  .welcome.on{display:flex}
+  .wgrid{width:min(1050px,100%);display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center}
+  @media(max-width:820px){.wgrid{grid-template-columns:1fr}}
+  .wleft h1{font-size:clamp(30px,5vw,52px);letter-spacing:3px;
+        background:linear-gradient(90deg,var(--blue),#fff,var(--red));
+        -webkit-background-clip:text;background-clip:text;color:transparent}
+  .wleft .pow{margin-top:6px;font-size:12px;letter-spacing:4px;color:var(--muted)}
+  .wleft .tag{margin-top:22px;font-size:15px;color:#b9d2ff;max-width:420px;line-height:1.6}
+  .wbtns{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+  .btn{border:none;cursor:pointer;border-radius:12px;padding:14px 26px;font-weight:700;font-size:14px;
+       letter-spacing:1px;transition:.2s;position:relative;overflow:hidden}
+  .btn:active{transform:scale(.96)}
+  .btn-primary{background:linear-gradient(135deg,var(--blue),#1b4fd8);color:#fff;box-shadow:0 8px 24px rgba(47,123,255,.4)}
+  .btn-primary:hover{box-shadow:0 10px 32px rgba(47,123,255,.7)}
+  .btn-outline{background:transparent;color:#fff;border:1.5px solid rgba(90,150,255,.55)}
+  .btn-outline:hover{background:rgba(90,150,255,.12)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;
+        backdrop-filter:blur(10px);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+  .card h3{font-size:14px;letter-spacing:2px;color:#9ec5ff;margin-bottom:14px}
+  input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);
+        background:rgba(5,12,30,.8);color:#fff;font-size:14px;outline:none;margin-bottom:10px}
+  input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,123,255,.2)}
+  .mini{font-size:11px;color:var(--muted);line-height:1.5}
+  .onboard{position:fixed;inset:0;display:none;z-index:95;background:rgba(5,10,24,.96);
+           align-items:center;justify-content:center;padding:20px}
+  .onboard.on{display:flex}
+  .onbox{border:2px solid var(--blue);border-radius:22px;padding:44px 30px;max-width:760px;text-align:center;
+         background:linear-gradient(160deg,rgba(47,123,255,.12),rgba(255,47,90,.08));
+         box-shadow:0 0 80px rgba(47,123,255,.3)}
+  .onbox h2{font-size:clamp(20px,4vw,34px);letter-spacing:4px;font-weight:900;line-height:1.4}
+  .onbox p{margin-top:16px;color:var(--muted);letter-spacing:2px;font-size:12px}
+  .onbox .btn{margin-top:28px}
+
+  /* ================= WORKSPACE ================= */
+  #app{display:none;height:100vh;flex-direction:column}
+  #app.on{display:flex}
+  .topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;
+          background:rgba(8,16,36,.85);border-bottom:1px solid var(--line);backdrop-filter:blur(10px);z-index:5}
+  .brand{font-weight:900;letter-spacing:2px;font-size:15px;
+         background:linear-gradient(90deg,var(--blue),#fff,var(--red));
+         -webkit-background-clip:text;background-clip:text;color:transparent;margin-right:6px}
+  .pill{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;
+        background:rgba(10,22,48,.6);color:#cfe0ff;transition:.2s;white-space:nowrap}
+  .pill:hover{border-color:var(--blue);background:rgba(47,123,255,.15)}
+  .pill.active{background:linear-gradient(135deg,var(--blue),#1b4fd8);color:#fff;border-color:transparent}
+  .boxed{border:2px solid var(--blue);border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;
+         letter-spacing:2px;color:#9ec5ff;background:rgba(47,123,255,.08)}
+  .switch{position:relative;width:96px;height:32px;border-radius:16px;background:#132a55;cursor:pointer;
+          border:1px solid var(--line);display:flex;align-items:center;padding:3px}
+  .switch .knob{width:42px;height:24px;border-radius:12px;background:var(--green);transition:.25s;
+                display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#04170d}
+  .switch.real{background:#3a0c18}
+  .switch.real .knob{transform:translateX(46px);background:var(--red);color:#fff}
+  .spacer{flex:1}
+
+  .layout{display:flex;flex:1;overflow:hidden}
+  .side{width:210px;overflow-y:auto;background:rgba(8,16,36,.8);border-right:1px solid var(--line);padding:12px 8px}
+  .side button{width:100%;text-align:left;padding:10px 12px;margin-bottom:4px;border-radius:9px;border:none;
+               background:transparent;color:#b9d2ff;font-size:13px;cursor:pointer;transition:.15s;display:flex;justify-content:space-between}
+  .side button:hover{background:rgba(47,123,255,.14)}
+  .side button.active{background:linear-gradient(90deg,rgba(47,123,255,.35),transparent);color:#fff;border-left:3px solid var(--blue)}
+  .side .sec{font-size:10px;color:#5f7ba8;letter-spacing:2px;margin:12px 8px 6px}
+
+  .main{flex:1;overflow-y:auto;padding:16px;position:relative}
+  .greet{font-size:20px;font-weight:800;letter-spacing:1px}
+  .greet span{color:var(--blue)}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--green);
+        background:rgba(37,208,122,.1);padding:4px 10px;border-radius:20px;margin-top:6px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.2s infinite}
+  @keyframes blink{50%{opacity:.2}}
+  .time{font-family:monospace;font-size:12px;color:var(--muted);margin-top:4px}
+
+  .volstrip{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}
+  .volstrip .pill{font-size:11px;padding:6px 14px}
+
+  .grid2{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+  @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;backdrop-filter:blur(10px)}
+  .panel h4{font-size:12px;letter-spacing:2px;color:#9ec5ff;margin-bottom:12px;font-weight:700}
+
+  .digits{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .digit{aspect-ratio:1;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;
+         justify-content:center;font-size:20px;font-weight:800;background:rgba(5,12,30,.7);
+         cursor:pointer;transition:.2s;position:relative}
+  .digit:hover{border-color:var(--blue);transform:translateY(-2px)}
+  .digit.win{background:rgba(37,208,122,.2);border-color:var(--green);color:var(--green)}
+  .digit.lose{background:rgba(255,47,90,.18);border-color:var(--red);color:var(--red)}
+
+  .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .field{flex:1;min-width:110px}
+  .field label{font-size:10px;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:5px}
+  .field input{margin:0;font-size:15px;font-weight:700;text-align:center}
+
+  .ou{display:flex;gap:12px;margin-top:16px}
+  .ou .sidebox{flex:1;border-radius:14px;padding:14px;text-align:center;border:1px solid var(--line);
+               background:rgba(5,12,30,.6)}
+  .ou .sidebox b{font-size:26px;display:block;margin:6px 0}
+  .ou .over b{color:var(--green)}
+  .ou .under b{color:var(--red)}
+  .cursorline{height:36px;border-radius:10px;background:rgba(5,12,30,.8);position:relative;
+              margin-top:12px;overflow:hidden;border:1px solid var(--line)}
+  .cursorline .g{position:absolute;left:0;top:0;bottom:0;width:50%;background:linear-gradient(90deg,rgba(37,208,122,.4),rgba(37,208,122,.05))}
+  .cursorline .r{position:absolute;right:0;top:0;bottom:0;width:50%;background:linear-gradient(270deg,rgba(255,47,90,.4),rgba(255,47,90,.05))}
+  .cursor{position:absolute;top:0;bottom:0;width:3px;background:#fff;box-shadow:0 0 14px #fff;
+          animation:scan 2.6s ease-in-out infinite alternate}
+  @keyframes scan{from{left:5%}to{left:92%}}
+
+  .tradebtns{display:flex;gap:10px;margin-top:16px}
+  .tradebtns .btn{flex:1;padding:14px;font-size:14px}
+  .btn-green{background:linear-gradient(135deg,#25d07a,#12915a);color:#03170e;box-shadow:0 8px 24px rgba(37,208,122,.35)}
+  .btn-red{background:linear-gradient(135deg,#ff2f5a,#b3103a);color:#fff;box-shadow:0 8px 24px rgba(255,47,90,.35)}
+
+  .quick{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .quick button{background:rgba(5,12,30,.7);border:1px solid var(--line);border-radius:12px;
+                padding:12px;text-align:left;color:#cfe0ff;cursor:pointer;transition:.2s;font-size:12px}
+  .quick button:hover{border-color:var(--blue);background:rgba(47,123,255,.12)}
+  .quick b{display:block;font-size:13px;color:#fff;margin-top:4px}
+
+  .ai-btn{position:fixed;right:22px;bottom:22px;width:66px;height:66px;border-radius:50%;border:none;
+          cursor:pointer;background:radial-gradient(circle at 30% 30%,#7ec8ff,var(--blue) 60%,#0a1a3f);
+          box-shadow:0 0 0 0 rgba(47,123,255,.7);animation:aipulse 2s infinite;z-index:50;
+          color:#fff;font-weight:900;font-size:22px}
+  @keyframes aipulse{70%{box-shadow:0 0 0 22px rgba(47,123,255,0)}100%{box-shadow:0 0 0 0 rgba(47,123,255,0)}}
+
+  /* shout-out toast */
+  #toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);
+         background:linear-gradient(135deg,var(--blue),#1b4fd8);color:#fff;padding:12px 22px;border-radius:12px;
+         font-size:13px;font-weight:700;letter-spacing:1px;opacity:0;pointer-events:none;transition:.3s;z-index:200;
+         box-shadow:0 12px 40px rgba(47,123,255,.5);white-space:nowrap}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:12px}
+  .acc-grid .pill{padding:14px;text-align:center;font-size:12px}
+
+  ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:rgba(90,150,255,.3);border-radius:8px}
+</style>
+</head>
+<body>
+
+<!-- ============ STEP 1: BACKGROUND ============ -->
+<div id="bg">
+  <div class="orb b"></div><div class="orb r"></div>
+  <span class="satellite" style="top:12%;left:8%">🛰️</span>
+  <span class="satellite" style="top:30%;right:6%;animation-delay:-8s">🛰️</span>
+  <div class="room">
+    <div class="monitor">
+      <div class="bar"></div>
+      <div class="candles"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="bot">🤖 AUTOMATED BOT — RUNNING</div>
+    </div>
+    <div class="laptop">
+      <div class="line" style="top:14px"></div><div class="line" style="top:26px;width:60%"></div>
+      <div class="line" style="top:38px"></div><div class="line" style="top:50px;width:75%"></div>
+      <div style="position:absolute;bottom:10px;left:10px;font-size:10px;color:#ff9ab0">📊 TRADING HUB</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STEPS 2 & 3: SPLASH ============ -->
+<div class="splash on" id="splash">
+  <div class="logo" id="splashTitle">VECTORMASHER</div>
+  <div class="sub" id="splashMsg">PLEASE WAIT WHILE WE CONNECT TO SERVER…</div>
+  <div class="bar-wrap"><div class="bar-fill" id="bar1"></div></div>
+  <div class="pct" id="pct1">0%</div>
+  <div class="seq" id="seq1"></div>
+</div>
+
+<!-- ============ STEP 4: WELCOME ============ -->
+<div class="welcome" id="welcome">
+  <div class="wgrid">
+    <div class="wleft">
+      <h1>VECTORMASHER</h1>
+      <div class="pow">POWERED BY DERIV</div>
+      <p class="tag">Everything you need to trade the world's markets — in one clean, free workspace.</p>
+      <div class="wbtns">
+        <button class="btn btn-primary" onclick="openDeriv('login')">LOG IN</button>
+        <button class="btn btn-outline" onclick="openDeriv('signup')">GET STARTED</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h3>LOG IN</h3>
+        <input id="loginEmail" placeholder="Email" type="email"/>
+        <input id="loginPass" placeholder="Password" type="password"/>
+        <button class="btn btn-primary" style="width:100%" onclick="openDeriv('login')">SIGN IN VIA DERIV</button>
+        <div class="mini" style="margin-top:8px">Secure OAuth — we never store your password.</div>
+      </div>
+      <div class="card">
+        <h3>CREATE FREE ACCOUNT</h3>
+        <div class="mini">New here? Open a free Deriv account in seconds and start with a demo balance.</div>
+        <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="openDeriv('signup')">CREATE ACCOUNT</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STEP 5: ONBOARDING SLIDE ============ -->
+<div class="onboard" id="onboard">
+  <div class="onbox">
+    <h2>EVERYTHING IN ONE WORKING SPACE<br/>FREE TO USE</h2>
+    <p>BOTS · SIGNALS · MANUAL TRADING · COPY TRADE · ACCUMULATORS</p>
+    <button class="btn btn-primary" onclick="enterApp()">ENTER WORKSPACE →</button>
+  </div>
+</div>
+
+<!-- ============ WORKSPACE ============ -->
+<div id="app">
+  <div class="topbar">
+    <span class="brand">VECTORMASHER</span>
+    <button class="pill" id="themeBtn" onclick="toggleTheme(this)">🌙</button>
+    <span class="boxed">D-R</span>
+    <button class="pill" id="curBtn" onclick="toggleCurrency(this)">KES</button>
+    <div class="switch" id="modeSwitch" onclick="toggleMode(this)">
+      <div class="knob">DEMO</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill" style="color:var(--green)">● CONNECTED</span>
+  </div>
+
+  <div class="layout">
+    <div class="side" id="sidebar"></div>
+    <div class="main" id="main"></div>
+  </div>
+</div>
+
+<button class="ai-btn" id="aiBtn" onclick="shout('AI ASSISTANT ACTIVATED')">AI</button>
+<div id="toast"></div>
+
+<script>
+/* ================= SHOUT-OUT (every button) ================= */
+function shout(msg){
+  const t=document.getElementById('toast');
+  t.innerText=msg.toUpperCase();t.classList.add('on');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1600);
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');
+  if(!b) return;
+  if(b.id==='aiBtn') return;
+  const label=b.innerText.trim().replace(/\s+/g,' ');
+  if(label && !b.onclick) shout(label+' — OK');
+});
+
+/* ================= STEP 2 & 3: SPLASH SEQUENCE ================= */
+const seq2=["BOOTING NODE…","HANDSHAKE…","LOADING ENGINE…","CONNECTING WS…","READY"];
+const seq3=["INITIALIZING D-BOT…","LOADING STRATEGIES…","CALIBRATING…","D-BOT ONLINE…"];
+function runSplash(title,msg,seqArr,next){
+  document.getElementById('splashTitle').innerText=title;
+  document.getElementById('splashMsg').innerText=msg;
+  const bar=document.getElementById('bar1'),pct=document.getElementById('pct1'),seq=document.getElementById('seq1');
+  bar.style.width='0%';pct.innerText='0%';let p=0,i=0;
+  const timer=setInterval(()=>{
+    p+=Math.random()*7+2; if(p>100)p=100;
+    bar.style.width=p+'%';pct.innerText=Math.floor(p)+'%';
+    const si=Math.min(seqArr.length-1,Math.floor(p/100*seqArr.length));
+    if(si!==i){i=si;seq.innerText=seqArr[si];}
+    if(p>=100){clearInterval(timer);seq.innerText='✔ COMPLETE';
+      setTimeout(next,450);}
+  },90);
+}
+/* boot: splash 2 → splash 3 → welcome */
+runSplash("VECTORMASHER","PLEASE WAIT WHILE WE CONNECT TO SERVER…",seq2,()=>{
+  runSplash("VECTORMASHER","INITIALIZING D-BOT…",seq3,()=>{
+    document.getElementById('splash').classList.remove('on');
+    document.getElementById('welcome').classList.add('on');
+  });
+});
+
+/* ================= LOGIN / SIGNUP (real Deriv OAuth URLs) ================= */
+const APP_ID="YOUR_APP_ID"; // ← replace after registering at developers.deriv.com
+function openDeriv(mode){
+  shout(mode==='login'?'OPENING DERIV LOGIN':'OPENING DERIV SIGN-UP');
+  const url = mode==='login'
+    ? `https://oauth.deriv.com/oauth2/authorize?app_id=${APP_ID}`
+    : `https://deriv.com/signup`;
+  window.open(url,'_blank');
+  // for a smooth demo flow, advance to onboarding after a moment
+  setTimeout(()=>{document.getElementById('welcome').classList.remove('on');
+                  document.getElementById('onboard').classList.add('on');},1200);
+}
+
+/* ================= ENTER APP ================= */
+function enterApp(){
+  document.getElementById('onboard').classList.remove('on');
+  document.getElementById('app').classList.add('on');
+  buildSidebar(); showView('dashboard'); startClock();
+  shout('WELCOME TO VECTORMASHER');
+}
+
+/* ================= TOP BAR TOGGLES ================= */
+let dark=true;
+function toggleTheme(btn){
+  dark=!dark;
+  btn.innerText=dark?'🌙':'🌞';
+  document.documentElement.style.setProperty('--bg',dark?'#050a18':'#eaf1ff');
+  document.body.style.color=dark?'#e8f1ff':'#0a1a3f';
+  shout(dark?'DARK MODE':'DAY MODE');
+}
+let kes=true;
+function toggleCurrency(btn){
+  kes=!kes;btn.innerText=kes?'KES':'USD';
+  shout('CURRENCY: '+(kes?'KENYAN SHILLING':'US DOLLAR'));
+  renderMain();
+}
+let real=false;
+function toggleMode(el){
+  real=!real;
+  el.classList.toggle('real',real);
+  el.querySelector('.knob').innerText=real?'REAL':'DEMO';
+  shout(real?'SWITCHED TO REAL ACCOUNT':'SWITCHED TO DEMO ACCOUNT');
+}
+
+/* ================= SIDEBAR ================= */
+const MENU=[
+  ['Dashboard','dashboard'],['Bot Builder','builder'],['Free Bots','free
