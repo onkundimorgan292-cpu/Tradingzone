@@ -314,7 +314,7 @@ document.addEventListener('click',e=>{
   if(label && !b.onclick) shout(label+' — OK');
 });
 
-/* ================= STEP 2 & 3: SPLASH SEQUENCE ================= */
+/* ================= STEP 2 & 3: SPLASH SEQUENCE (NOW FASTER) ================= */
 const seq2=["BOOTING NODE…","HANDSHAKE…","LOADING ENGINE…","CONNECTING WS…","READY"];
 const seq3=["INITIALIZING D-BOT…","LOADING STRATEGIES…","CALIBRATING…","D-BOT ONLINE…"];
 function runSplash(title,msg,seqArr,next){
@@ -322,14 +322,19 @@ function runSplash(title,msg,seqArr,next){
   document.getElementById('splashMsg').innerText=msg;
   const bar=document.getElementById('bar1'),pct=document.getElementById('pct1'),seq=document.getElementById('seq1');
   bar.style.width='0%';pct.innerText='0%';let p=0,i=0;
+  
+  // --- FASTER TIMER LOGIC ---
   const timer=setInterval(()=>{
-    p+=Math.random()*7+2; if(p>100)p=100;
-    bar.style.width=p+'%';pct.innerText=Math.floor(p)+'%';
+    p += Math.random() * 10 + 5; // Jumps 5-15% at a time
+    if(p>100) p=100;
+    bar.style.width=p+'%'; pct.innerText=Math.floor(p)+'%';
     const si=Math.min(seqArr.length-1,Math.floor(p/100*seqArr.length));
     if(si!==i){i=si;seq.innerText=seqArr[si];}
-    if(p>=100){clearInterval(timer);seq.innerText='✔ COMPLETE';
-      setTimeout(next,450);}
-  },90);
+    if(p>=100){
+      clearInterval(timer); seq.innerText='✔ COMPLETE';
+      setTimeout(next, 200); // Wait only 0.2s before moving to next step
+    }
+  }, 30); // Runs every 0.03s (much faster)
 }
 /* boot: splash 2 → splash 3 → welcome */
 runSplash("VECTORMASHER","PLEASE WAIT WHILE WE CONNECT TO SERVER…",seq2,()=>{
@@ -385,4 +390,59 @@ function toggleMode(el){
 
 /* ================= SIDEBAR ================= */
 const MENU=[
-  ['Dashboard','dashboard'],['Bot Builder','builder'],['Free Bots','free
+  ['Dashboard','dashboard'],['Bot Builder','builder'],['Free Bots','freebots'],
+  ['Premium AI Bot','premium'],['Signal AI Bot','signals'],['Manual Trader','manual'],
+  ['Bulk Trader','bulk'],['Copy Trade','copy'],['Automated','auto'],
+  ['Speed Bot','speed'],['Chat','chat'],['Accumulator','acc']
+];
+function buildSidebar(){
+  const s=document.getElementById('sidebar');
+  s.innerHTML='<div class="sec">TRADING</div>'+
+    MENU.map(([n,k])=>`<button data-k="${k}" onclick="showView('${k}',this)">${n}</button>`).join('');
+}
+let currentView='dashboard';
+function showView(k,btn){
+  currentView=k;
+  document.querySelectorAll('#sidebar button').forEach(b=>b.classList.toggle('active',b.dataset.k===k));
+  shout(MENU.find(m=>m[1]===k)[0].toUpperCase());
+  renderMain();
+}
+
+/* ================= GREETING ================= */
+function greetWord(){
+  const h=new Date().getHours();
+  if(h<12) return 'GOOD MORNING';
+  if(h<17) return 'GOOD AFTERNOON';
+  return 'GOOD EVENING';
+}
+let clockTimer;
+function startClock(){
+  clearInterval(clockTimer);
+  clockTimer=setInterval(()=>{
+    const el=document.getElementById('liveTime');
+    if(el) el.innerText=new Date().toLocaleTimeString();
+    const g=document.getElementById('greetWord');
+    if(g) g.innerText=greetWord();
+  },1000);
+}
+
+/* ================= MAIN VIEWS ================= */
+function money(v){return (kes?'KES ':'$ ')+(kes?(v*130).toFixed(0):v.toFixed(2));}
+
+function renderMain(){
+  const m=document.getElementById('main');
+  if(currentView==='acc'){ m.innerHTML=accView(); return; }
+  if(currentView==='chat'){ m.innerHTML=chatView(); return; }
+  if(currentView==='dashboard'||currentView==='manual'||currentView==='speed'||
+     currentView==='bulk'||currentView==='copy'||currentView==='auto'||
+     currentView==='freebots'||currentView==='premium'||currentView==='signals'||currentView==='builder'){
+    m.innerHTML=traderView(currentView); return;
+  }
+  m.innerHTML=traderView('dashboard');
+}
+
+function traderView(k){
+  return `
+  <div class="greet"><span id="greetWord">${greetWord()}</span>, TRADER 👋</div>
+  <div class="live"><span class="dot"></span> MARKET LIVE</div>
+  <
